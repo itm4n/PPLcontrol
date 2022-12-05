@@ -19,7 +19,8 @@ enum class Offset
 	ProcessActiveProcessLinks,
 	ProcessUniqueProcessId,
 	ProcessProtection,
-	Test
+	ProcessSignatureLevel,
+	ProcessSectionSignatureLevel
 };
 
 class OffsetFinder
@@ -39,4 +40,6 @@ private:
 	BOOL FindProcessActiveProcessLinksOffset();
 	BOOL FindProcessUniqueProcessIdOffset();
 	BOOL FindProcessProtectionOffset();
+	BOOL FindProcessSignatureLevelOffset();
+	BOOL FindProcessSectionSignatureLevelOffset();
 };

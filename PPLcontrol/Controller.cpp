@@ -22,21 +22,28 @@ BOOL Controller::ListProtectedProcesses()
     if (!GetProcessList(&pProcessInfo))
         return FALSE;
 
-    DEBUG(L"Number of entries: %d", pProcessInfo->NumberOfEntries);
+    DEBUG(L"Number of process entries: %d", pProcessInfo->NumberOfEntries);
 
-    wprintf(L"\n %6ws | %-7ws | %ws\n", L"PID", L"Level", L"Signer");
-    wprintf(L" -------+---------+----------------\n");
+    wprintf(L"\n");
+
+    wprintf(L"   PID  |  Level  |     Signer      |     EXE sig. level    |     DLL sig. level    |    Kernel addr.    \n");
+    wprintf(L" -------+---------+-----------------+-----------------------+-----------------------+--------------------\n");
 
     for (dwIndex = 0; dwIndex < pProcessInfo->NumberOfEntries; dwIndex++)
     {
         if (pProcessInfo->Entries[dwIndex].ProtectionLevel > 0)
         {
-            wprintf(L" %6d | %-3ws (%d) | %ws (%d)\n",
+            wprintf(L" %6d | %-3ws (%d) | %-11ws (%d) | %-14ws (0x%02x) | %-14ws (0x%02x) | 0x%016llx\n",
                 pProcessInfo->Entries[dwIndex].Pid,
                 Utils::GetProtectionLevelAsString(pProcessInfo->Entries[dwIndex].ProtectionLevel),
                 pProcessInfo->Entries[dwIndex].ProtectionLevel,
                 Utils::GetSignerTypeAsString(pProcessInfo->Entries[dwIndex].SignerType),
-                pProcessInfo->Entries[dwIndex].SignerType
+                pProcessInfo->Entries[dwIndex].SignerType,
+                Utils::GetSignatureLevelAsString(pProcessInfo->Entries[dwIndex].SignatureLevel),
+                pProcessInfo->Entries[dwIndex].SignatureLevel,
+                Utils::GetSignatureLevelAsString(pProcessInfo->Entries[dwIndex].SectionSignatureLevel),
+                pProcessInfo->Entries[dwIndex].SectionSignatureLevel,
+                pProcessInfo->Entries[dwIndex].KernelAddress
             );
 
             dwNumberOfProtectedProceses++;
@@ -56,7 +63,7 @@ BOOL Controller::GetProcessProtection(DWORD Pid)
 {
     ULONG_PTR pProcess;
     UCHAR bProtection;
-    WORD wProtectionLevel, wSignerType;
+    UCHAR bProtectionLevel, bSignerType;
 
     if (!GetProcessKernelAddress(Pid, &pProcess))
         return FALSE;
@@ -66,19 +73,19 @@ BOOL Controller::GetProcessProtection(DWORD Pid)
 
     if (bProtection > 0)
     {
-        wProtectionLevel = Utils::GetProtectionLevel(bProtection);
-        wSignerType = Utils::GetSignerType(bProtection);
+        bProtectionLevel = Utils::GetProtectionLevel(bProtection);
+        bSignerType = Utils::GetSignerType(bProtection);
 
-        SUCCESS(L"Process with PID %d is a %ws with the Signer type %ws (%d).",
+        SUCCESS(L"The process with PID %d is a %ws with the Signer type '%ws' (%d).",
             Pid,
-            Utils::GetProtectionLevelAsString(wProtectionLevel),
-            Utils::GetSignerTypeAsString(wSignerType),
-            wSignerType
+            Utils::GetProtectionLevelAsString(bProtectionLevel),
+            Utils::GetSignerTypeAsString(bSignerType),
+            bSignerType
         );
     }
     else
     {
-        INFO(L"Process with PID %d is not protected.", Pid);
+        INFO(L"The process with PID %d is not protected.", Pid);
     }
 
     return TRUE;
@@ -88,21 +95,15 @@ BOOL Controller::SetProcessProtection(DWORD Pid, LPCWSTR ProtectionLevel, LPCWST
 {
     ULONG_PTR pProcess;
     UCHAR bProtectionOld, bProtectionNew, bProtectionEffective;
-    WORD wProtectionLevel, wSignerType;
+    UCHAR bProtectionLevel, bSignerType;
 
-    if (!(wProtectionLevel = Utils::GetProtectionLevelFromString(ProtectionLevel)))
-    {
-        ERROR(L"The supplied Protection level is invalid: %ws", ProtectionLevel);
+    if (!(bProtectionLevel = Utils::GetProtectionLevelFromString(ProtectionLevel)))
         return FALSE;
-    }
 
-    if (!(wSignerType = Utils::GetSignerTypeFromString(SignerType)))
-    {
-        ERROR(L"The supplied Signer type is invalid: %ws", SignerType);
+    if (!(bSignerType = Utils::GetSignerTypeFromString(SignerType)))
         return FALSE;
-    }
 
-    bProtectionNew = Utils::GetProtection(wProtectionLevel, wSignerType);
+    bProtectionNew = Utils::GetProtection(bProtectionLevel, bSignerType);
 
     if (!GetProcessKernelAddress(Pid, &pProcess))
         return FALSE;
@@ -112,7 +113,7 @@ BOOL Controller::SetProcessProtection(DWORD Pid, LPCWSTR ProtectionLevel, LPCWST
 
     if (bProtectionOld == bProtectionNew)
     {
-        ERROR(L"The process with PID %d already has the protection %ws-%ws.",
+        ERROR(L"The process with PID %d already has the protection '%ws-%ws'.",
             Pid,
             Utils::GetProtectionLevelAsString(Utils::GetProtectionLevel(bProtectionOld)),
             Utils::GetSignerTypeAsString(Utils::GetSignerType(bProtectionOld))
@@ -123,9 +124,9 @@ BOOL Controller::SetProcessProtection(DWORD Pid, LPCWSTR ProtectionLevel, LPCWST
 
     if (!SetProcessProtection(pProcess, bProtectionNew))
     {
-        ERROR(L"Failed to set Protection %ws-%ws on process with PID %d.",
-            Utils::GetProtectionLevelAsString(wProtectionLevel),
-            Utils::GetSignerTypeAsString(wSignerType),
+        ERROR(L"Failed to set Protection '%ws-%ws' on process with PID %d.",
+            Utils::GetProtectionLevelAsString(bProtectionLevel),
+            Utils::GetSignerTypeAsString(bSignerType),
             Pid
         );
 
@@ -137,9 +138,9 @@ BOOL Controller::SetProcessProtection(DWORD Pid, LPCWSTR ProtectionLevel, LPCWST
 
     if (bProtectionNew != bProtectionEffective)
     {
-        ERROR(L"Tried to set the protection %ws-%ws, but the effective protection is: %ws-%ws.",
-            Utils::GetProtectionLevelAsString(wProtectionLevel),
-            Utils::GetSignerTypeAsString(wSignerType),
+        ERROR(L"Tried to set the protection '%ws-%ws', but the effective protection is: '%ws-%ws'.",
+            Utils::GetProtectionLevelAsString(bProtectionLevel),
+            Utils::GetSignerTypeAsString(bSignerType),
             Utils::GetProtectionLevelAsString(Utils::GetProtectionLevel(bProtectionEffective)),
             Utils::GetSignerTypeAsString(Utils::GetSignerType(bProtectionEffective))
         );
@@ -147,12 +148,69 @@ BOOL Controller::SetProcessProtection(DWORD Pid, LPCWSTR ProtectionLevel, LPCWST
         return FALSE;
     }
 
-    SUCCESS(L"The Protection %ws-%ws was set on the process with PID %d, previous protection was: %ws-%ws.",
-        Utils::GetProtectionLevelAsString(wProtectionLevel),
-        Utils::GetSignerTypeAsString(wSignerType),
+    SUCCESS(L"The Protection '%ws-%ws' was set on the process with PID %d, previous protection was: '%ws-%ws'.",
+        Utils::GetProtectionLevelAsString(bProtectionLevel),
+        Utils::GetSignerTypeAsString(bSignerType),
         Pid,
         Utils::GetProtectionLevelAsString(Utils::GetProtectionLevel(bProtectionOld)),
         Utils::GetSignerTypeAsString(Utils::GetSignerType(bProtectionOld))
+    );
+
+    return TRUE;
+}
+
+BOOL Controller::GetProcessSignatureLevels(DWORD Pid)
+{
+    ULONG_PTR pProcess;
+    UCHAR bSignatureLevel, bSectionSignatureLevel;
+
+    if (!GetProcessKernelAddress(Pid, &pProcess))
+        return FALSE;
+
+    if (!GetProcessSignatureLevel(pProcess, &bSignatureLevel))
+        return FALSE;
+
+    if (!GetProcessSectionSignatureLevel(pProcess, &bSectionSignatureLevel))
+        return FALSE;
+
+    INFO(L"The process with PID %d has the Signature level '%ws' (0x%02x) and the Section signature level '%ws' (0x%02x).",
+        Pid,
+        Utils::GetSignatureLevelAsString(bSignatureLevel),
+        bSignatureLevel,
+        Utils::GetSignatureLevelAsString(bSectionSignatureLevel),
+        bSectionSignatureLevel
+    );
+
+    return TRUE;
+}
+
+BOOL Controller::SetProcessSignatureLevels(DWORD Pid, LPCWSTR SignerType)
+{
+    ULONG_PTR pProcess;
+    UCHAR bSignerType, bSignatureLevel, bSectionSignatureLevel;
+
+    if (!(bSignerType = Utils::GetSignerTypeFromString(SignerType)))
+        return FALSE;
+
+    if ((bSignatureLevel = Utils::GetSignatureLevel(bSignerType)) == 0xff)
+        return FALSE;
+
+    if ((bSectionSignatureLevel = Utils::GetSectionSignatureLevel(bSignerType)) == 0xff)
+        return FALSE;
+
+    if (!GetProcessKernelAddress(Pid, &pProcess))
+        return FALSE;
+
+    if (!SetProcessSignatureLevel(pProcess, bSignatureLevel))
+        return FALSE;
+
+    if (!SetProcessSectionSignatureLevel(pProcess, bSectionSignatureLevel))
+        return FALSE;
+
+    SUCCESS(L"The Signature level '%ws' and the Section signature level '%ws' were set on the process with PID %d.",
+        Utils::GetSignatureLevelAsString(bSignatureLevel),
+        Utils::GetSignatureLevelAsString(bSectionSignatureLevel),
+        Pid
     );
 
     return TRUE;
@@ -171,7 +229,7 @@ BOOL Controller::ProtectProcess(DWORD Pid, LPCWSTR ProtectionLevel, LPCWSTR Sign
 
     if (bProtection > 0)
     {
-        ERROR(L"Process with PID %d is already protected, current protection is %ws-%ws.",
+        ERROR(L"The process with PID %d is already protected, current protection is %ws-%ws.",
             Pid,
             Utils::GetProtectionLevelAsString(Utils::GetProtectionLevel(bProtection)),
             Utils::GetSignerTypeAsString(Utils::GetSignerType(bProtection))
@@ -180,7 +238,13 @@ BOOL Controller::ProtectProcess(DWORD Pid, LPCWSTR ProtectionLevel, LPCWSTR Sign
         return FALSE;
     }
 
-    return SetProcessProtection(Pid, ProtectionLevel, SignerType);
+    if (!SetProcessProtection(Pid, ProtectionLevel, SignerType))
+        return FALSE;
+
+    if (!SetProcessSignatureLevels(Pid, SignerType))
+        return FALSE;
+
+    return TRUE;
 }
 
 BOOL Controller::UnprotectProcess(DWORD Pid)
@@ -196,7 +260,7 @@ BOOL Controller::UnprotectProcess(DWORD Pid)
 
     if (bProtection == 0)
     {
-        ERROR(L"Process with PID %d is not protected, nothing to unprotect.", Pid);
+        ERROR(L"The process with PID %d is not protected, nothing to unprotect.", Pid);
         return FALSE;
     }
 
@@ -211,7 +275,29 @@ BOOL Controller::UnprotectProcess(DWORD Pid)
 
     if (bProtection != 0)
     {
-        ERROR(L"Process with PID %d still appears to be protected.", Pid);
+        ERROR(L"The process with PID %d still appears to be protected.", Pid);
+        return FALSE;
+    }
+
+    if (!SetProcessSignatureLevel(pProcess, (UCHAR)SignatureLevel::Unchecked))
+    {
+        ERROR(L"Failed to set Signature level '%ws' (0x%02x) on process with PID %d.",
+            Utils::GetSignatureLevelAsString((UCHAR)SignatureLevel::Unchecked),
+            (UCHAR)SignatureLevel::Unchecked,
+            Pid
+        );
+
+        return FALSE;
+    }
+
+    if (!SetProcessSectionSignatureLevel(pProcess, (UCHAR)SignatureLevel::Unchecked))
+    {
+        ERROR(L"Failed to set Section signature level '%ws' (0x%02x) on process with PID %d.",
+            Utils::GetSignatureLevelAsString((UCHAR)SignatureLevel::Unchecked),
+            (UCHAR)SignatureLevel::Unchecked,
+            Pid
+        );
+
         return FALSE;
     }
 
@@ -282,7 +368,7 @@ BOOL Controller::GetProcessList(PCTRL_PROCESS_INFO *List)
     DWORD dwBaseSize = 4096, dwSize, dwNumberOfEntries = 0;
     DWORD64 dwProcessId;
     ULONG_PTR pProcess, pInitialSystemProcess;
-    UCHAR bProtection;
+    UCHAR bProtection, bSignatureLevel, bSectionSignatureLevel;
 
     if (!(pProcessList = (PCTRL_PROCESS_INFO)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwBaseSize)))
         return FALSE;
@@ -304,6 +390,12 @@ BOOL Controller::GetProcessList(PCTRL_PROCESS_INFO *List)
         if (!GetProcessProtection(pProcess, &bProtection))
             break;
 
+        if (!GetProcessSignatureLevel(pProcess, &bSignatureLevel))
+            break;
+
+        if (!GetProcessSectionSignatureLevel(pProcess, &bSectionSignatureLevel))
+            break;
+
         dwSize += sizeof((*List)[0]);
 
         if (dwSize >= dwBaseSize)
@@ -319,6 +411,8 @@ BOOL Controller::GetProcessList(PCTRL_PROCESS_INFO *List)
         pProcessList->Entries[dwNumberOfEntries].Pid = (DWORD)dwProcessId;
         pProcessList->Entries[dwNumberOfEntries].ProtectionLevel = Utils::GetProtectionLevel(bProtection);
         pProcessList->Entries[dwNumberOfEntries].SignerType = Utils::GetSignerType(bProtection);
+        pProcessList->Entries[dwNumberOfEntries].SignatureLevel = bSignatureLevel;
+        pProcessList->Entries[dwNumberOfEntries].SectionSignatureLevel = bSectionSignatureLevel;
 
         dwNumberOfEntries++;
 
@@ -349,9 +443,9 @@ BOOL Controller::GetProcessProtection(ULONG_PTR Addr, PUCHAR Protection)
     if (!(_rtc->Read8(Addr + _of->GetOffset(Offset::ProcessProtection), &bProtection)))
     {
 #ifdef _WIN64
-        ERROR(L"Failed to retrieve Protection attribute of process with @ 0x%016llx.", Addr);
+        ERROR(L"Failed to retrieve Protection attribute of process @ 0x%016llx.", Addr);
 #else
-        ERROR(L"Failed to retrieve Protection attribute of process with @ 0x%08x.", Addr);
+        ERROR(L"Failed to retrieve Protection attribute of process @ 0x%08x.", Addr);
 #endif
         return FALSE;
     }
@@ -364,4 +458,52 @@ BOOL Controller::GetProcessProtection(ULONG_PTR Addr, PUCHAR Protection)
 BOOL Controller::SetProcessProtection(ULONG_PTR Addr, UCHAR Protection)
 {
     return _rtc->Write8(Addr + _of->GetOffset(Offset::ProcessProtection), Protection);
+}
+
+BOOL Controller::GetProcessSignatureLevel(ULONG_PTR Addr, PUCHAR SignatureLevel)
+{
+    UCHAR bSignatureLevel;
+
+    if (!(_rtc->Read8(Addr + _of->GetOffset(Offset::ProcessSignatureLevel), &bSignatureLevel)))
+    {
+#ifdef _WIN64
+        ERROR(L"Failed to retrieve SignatureLevel attribute of process @ 0x%016llx.", Addr);
+#else
+        ERROR(L"Failed to retrieve SignatureLevel attribute of process @ 0x%08x.", Addr);
+#endif
+        return FALSE;
+    }
+
+    *SignatureLevel = bSignatureLevel;
+
+    return TRUE;
+}
+
+BOOL Controller::SetProcessSignatureLevel(ULONG_PTR Addr, UCHAR SignatureLevel)
+{
+    return _rtc->Write8(Addr + _of->GetOffset(Offset::ProcessSignatureLevel), SignatureLevel);
+}
+
+BOOL Controller::GetProcessSectionSignatureLevel(ULONG_PTR Addr, PUCHAR SectionSignatureLevel)
+{
+    UCHAR bSectionSignatureLevel;
+
+    if (!(_rtc->Read8(Addr + _of->GetOffset(Offset::ProcessSectionSignatureLevel), &bSectionSignatureLevel)))
+    {
+#ifdef _WIN64
+        ERROR(L"Failed to retrieve SectionSignatureLevel attribute of process @ 0x%016llx.", Addr);
+#else
+        ERROR(L"Failed to retrieve SectionSignatureLevel attribute of process @ 0x%08x.", Addr);
+#endif
+        return FALSE;
+    }
+
+    *SectionSignatureLevel = bSectionSignatureLevel;
+
+    return TRUE;
+}
+
+BOOL Controller::SetProcessSectionSignatureLevel(ULONG_PTR Addr, UCHAR SectionSignatureLevel)
+{
+    return _rtc->Write8(Addr + _of->GetOffset(Offset::ProcessSectionSignatureLevel), SectionSignatureLevel);
 }

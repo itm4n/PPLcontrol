@@ -32,6 +32,12 @@ BOOL OffsetFinder::FindAllOffsets()
 	if (!FindProcessActiveProcessLinksOffset())
 		return FALSE;
 
+	if (!FindProcessSignatureLevelOffset())
+		return FALSE;
+
+	if (!FindProcessSectionSignatureLevelOffset())
+		return FALSE;
+
 	return TRUE;
 }
 
@@ -153,6 +159,50 @@ BOOL OffsetFinder::FindProcessProtectionOffset()
 	}
 
 	_OffsetMap.insert(std::make_pair(Offset::ProcessProtection, wProtectionOffsetA));
+
+	return TRUE;
+}
+
+BOOL OffsetFinder::FindProcessSignatureLevelOffset()
+{
+	WORD wSignatureLevel;
+
+	if (_OffsetMap.find(Offset::ProcessSignatureLevel) != _OffsetMap.end())
+		return TRUE;
+
+	if (_OffsetMap.find(Offset::ProcessProtection) == _OffsetMap.end())
+	{
+		ERROR(L"The offset 'Protection' is not defined.");
+		return FALSE;
+	}
+
+	wSignatureLevel = (WORD)_OffsetMap[Offset::ProcessProtection] - (2 * sizeof(UCHAR));
+
+	DEBUG(L"Offset: 0x%04x", wSignatureLevel);
+
+	_OffsetMap.insert(std::make_pair(Offset::ProcessSignatureLevel, wSignatureLevel));
+
+	return TRUE;
+}
+
+BOOL OffsetFinder::FindProcessSectionSignatureLevelOffset()
+{
+	WORD wSectionSignatureLevel;
+
+	if (_OffsetMap.find(Offset::ProcessSectionSignatureLevel) != _OffsetMap.end())
+		return TRUE;
+
+	if (_OffsetMap.find(Offset::ProcessProtection) == _OffsetMap.end())
+	{
+		ERROR(L"The offset 'Protection' is not defined.");
+		return FALSE;
+	}
+
+	wSectionSignatureLevel = (WORD)_OffsetMap[Offset::ProcessProtection] - sizeof(UCHAR);
+
+	DEBUG(L"Offset: 0x%04x", wSectionSignatureLevel);
+
+	_OffsetMap.insert(std::make_pair(Offset::ProcessSectionSignatureLevel, wSectionSignatureLevel));
 
 	return TRUE;
 }

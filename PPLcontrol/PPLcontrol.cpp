@@ -4,6 +4,12 @@
 #include "Utils.h"
 #include "Controller.h"
 
+#define PPLCONTROL_STR_CMD_LIST L"list"
+#define PPLCONTROL_STR_CMD_GET L"get"
+#define PPLCONTROL_STR_CMD_SET L"set"
+#define PPLCONTROL_STR_CMD_PROTECT L"protect"
+#define PPLCONTROL_STR_CMD_UNPROTECT L"unprotect"
+
 VOID PrintUsage(LPWSTR Prog);
 VOID PrintKernelDriverUsage();
 
@@ -31,12 +37,12 @@ int wmain(int argc, wchar_t* argv[])
         return 2;
     }
 
-    if (!_wcsicmp(argv[1], L"list"))
+    if (!_wcsicmp(argv[1], PPLCONTROL_STR_CMD_LIST))
     {
         if (!ctrl->ListProtectedProcesses())
             return 2;
     }
-    else if (!_wcsicmp(argv[1], L"get") || !_wcsicmp(argv[1], L"unprotect"))
+    else if (!_wcsicmp(argv[1], PPLCONTROL_STR_CMD_GET) || !_wcsicmp(argv[1], PPLCONTROL_STR_CMD_UNPROTECT))
     {
         ++argv;
         --argc;
@@ -53,12 +59,12 @@ int wmain(int argc, wchar_t* argv[])
             return 1;
         }
 
-        if (!_wcsicmp(argv[0], L"get"))
+        if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_GET))
         {
             if (!ctrl->GetProcessProtection(dwPid))
                 return 2;
         }
-        else if (!_wcsicmp(argv[0], L"unprotect"))
+        else if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_UNPROTECT))
         {
             if (!ctrl->UnprotectProcess(dwPid))
                 return 2;
@@ -69,7 +75,7 @@ int wmain(int argc, wchar_t* argv[])
             return 1;
         }
     }
-    else if (!_wcsicmp(argv[1], L"set") || !_wcsicmp(argv[1], L"protect"))
+    else if (!_wcsicmp(argv[1], PPLCONTROL_STR_CMD_SET) || !_wcsicmp(argv[1], PPLCONTROL_STR_CMD_PROTECT))
     {
         ++argv;
         --argc;
@@ -86,12 +92,12 @@ int wmain(int argc, wchar_t* argv[])
             return 1;
         }
 
-        if (!_wcsicmp(argv[0], L"set"))
+        if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_SET))
         {
             if (!ctrl->SetProcessProtection(dwPid, argv[2], argv[3]))
                 return 2;
         }
-        else if (!_wcsicmp(argv[0], L"protect"))
+        else if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_PROTECT))
         {
             if (!ctrl->ProtectProcess(dwPid, argv[2], argv[3]))
                 return 2;
@@ -120,16 +126,21 @@ VOID PrintUsage(LPWSTR Prog)
          "  %ws <CMD> <ARGS>\n"
          "\n"
          "Commands:\n"
-         "  list\n"
-         "  get <PID>\n"
-         "  set <PID> <PP|PPL> <TYPE>\n"
-         "  protect <PID> <PP|PPL> <TYPE>\n"
-         "  unprotect <PID>\n"
+         "  %ws\n"
+         "  %ws <PID>\n"
+         "  %ws <PID> <PP|PPL> <TYPE>\n"
+         "  %ws <PID> <PP|PPL> <TYPE>\n"
+         "  %ws <PID>\n"
          "\n"
          "Signer Types:\n"
          "  Authenticode, CodeGen, Antimalware, Lsa, Windows, WinTcb, WinSystem\n"
          "\n",
-        Prog
+        Prog,
+        PPLCONTROL_STR_CMD_LIST,
+        PPLCONTROL_STR_CMD_GET,
+        PPLCONTROL_STR_CMD_SET,
+        PPLCONTROL_STR_CMD_PROTECT,
+        PPLCONTROL_STR_CMD_UNPROTECT
     );
 }
 
