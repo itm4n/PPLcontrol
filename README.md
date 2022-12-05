@@ -110,5 +110,5 @@ C:\Temp>PPLcontrol.exe protect 1337 PPL WinTcb
 
 ## Credit
 
-- [@aceb0nd](https://twitter.com/aceb0nd) for the tool [PLKiller](https://github.com/RedCursorSecurityConsulting/PPLKiller)
-- [@aionescu](https://twitter.com/aionescu) for the article [Protected Processes Part 3: Windows PKI Internals (Signing Levels, Scenarios, Root Keys, EKUs & Runtime Signers](https://www.alex-ionescu.com/?p=146](https://www.alex-ionescu.com/?p=146)
+- [@aceb0nd](https://twitter.com/aceb0nd) for the tool [PPLKiller](https://github.com/RedCursorSecurityConsulting/PPLKiller)
+- [@aionescu](https://twitter.com/aionescu) for the article [Protected Processes Part 3: Windows PKI Internals (Signing Levels, Scenarios, Root Keys, EKUs & Runtime Signers)](https://www.alex-ionescu.com/?p=146)
