@@ -3,13 +3,13 @@
 #include <Windows.h>
 #include <iostream>
 
-#define PPL_CONTROL_DEBUG_ENABLED FALSE
+#define PPLCONTROL_DEBUG_ENABLED FALSE
 
 #define WIDEH(x) L##x
 #define WIDE(x) WIDEH(x)
 #define NOOP do {} while(0)
 
-#if PPL_CONTROL_DEBUG_ENABLED == TRUE
+#if PPLCONTROL_DEBUG_ENABLED == TRUE
 #define DEBUG_FORMAT( f ) "DEBUG: %ws | " f "\r\n"
 #define DEBUG( format, ... ) wprintf( WIDE(DEBUG_FORMAT(format)), WIDE(__FUNCTION__), __VA_ARGS__ )
 #else
@@ -30,3 +30,45 @@
 
 #define SUCCESS_FORMAT( f ) "[+] " f "\r\n"
 #define SUCCESS( format, ... ) wprintf( WIDE(SUCCESS_FORMAT(format)), __VA_ARGS__ )
+
+typedef enum _PS_PROTECTED_TYPE
+{
+    PsProtectedTypeNone = 0,
+    PsProtectedTypeProtectedLight = 1,
+    PsProtectedTypeProtected = 2
+} PS_PROTECTED_TYPE, * PPS_PROTECTED_TYPE;
+
+typedef enum _PS_PROTECTED_SIGNER
+{
+    PsProtectedSignerNone = 0,      // 0
+    PsProtectedSignerAuthenticode,  // 1
+    PsProtectedSignerCodeGen,       // 2
+    PsProtectedSignerAntimalware,   // 3
+    PsProtectedSignerLsa,           // 4
+    PsProtectedSignerWindows,       // 5
+    PsProtectedSignerWinTcb,        // 6
+    PsProtectedSignerWinSystem,     // 7
+    PsProtectedSignerApp,           // 8
+    PsProtectedSignerMax            // 9
+} PS_PROTECTED_SIGNER, * PPS_PROTECTED_SIGNER;
+
+enum class SignatureLevel
+{
+	// https://github.com/palantir/exploitguard
+	Unchecked,
+	Unsigned,
+	Enterprise,
+	Custom1,
+	Authenticode,
+	Custom2,
+	Store,
+	Antimalware,
+	Microsoft,
+	Custom4,
+	Custom5,
+	DynamicCodegen,
+	Windows,
+	WindowsProtectedProcessLight,
+	WindowsTcb,
+	Custom6
+};
