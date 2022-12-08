@@ -139,19 +139,19 @@ UCHAR Utils::GetSignatureLevel(UCHAR SignerType)
     switch (SignerType)
     {
     case PsProtectedSignerNone:
-        return (UCHAR)SignatureLevel::Unchecked;
+        return SE_SIGNING_LEVEL_UNCHECKED;
     case PsProtectedSignerAuthenticode:
-        return (UCHAR)SignatureLevel::Authenticode;
+        return SE_SIGNING_LEVEL_AUTHENTICODE;
     case PsProtectedSignerCodeGen:
-        return (UCHAR)SignatureLevel::DynamicCodegen;
+        return SE_SIGNING_LEVEL_DYNAMIC_CODEGEN;
     case PsProtectedSignerAntimalware:
-        return (UCHAR)SignatureLevel::Antimalware;
+        return SE_SIGNING_LEVEL_ANTIMALWARE;
     case PsProtectedSignerLsa:
-        return (UCHAR)SignatureLevel::Windows;
+        return SE_SIGNING_LEVEL_WINDOWS;
     case PsProtectedSignerWindows:
-        return (UCHAR)SignatureLevel::Windows;
+        return SE_SIGNING_LEVEL_WINDOWS;
     case PsProtectedSignerWinTcb:
-        return (UCHAR)SignatureLevel::WindowsTcb;
+        return SE_SIGNING_LEVEL_WINDOWS_TCB;
     }
 
     ERROR(L"Failed to retrieve the Signature level associated to the Signer type value %d.", SignerType);
@@ -165,21 +165,21 @@ UCHAR Utils::GetSectionSignatureLevel(UCHAR SignerType)
     switch (SignerType)
     {
     case PsProtectedSignerNone:
-        return (UCHAR)SignatureLevel::Unchecked;
+        return SE_SIGNING_LEVEL_UNCHECKED;
     case PsProtectedSignerAuthenticode:
-        return (UCHAR)SignatureLevel::Authenticode;
+        return SE_SIGNING_LEVEL_AUTHENTICODE;
     case PsProtectedSignerCodeGen:
-        return (UCHAR)SignatureLevel::Store;
+        return SE_SIGNING_LEVEL_STORE;
     case PsProtectedSignerAntimalware:
-        return (UCHAR)SignatureLevel::Antimalware;
+        return SE_SIGNING_LEVEL_ANTIMALWARE;
     case PsProtectedSignerLsa:
-        return (UCHAR)SignatureLevel::Microsoft;
+        return SE_SIGNING_LEVEL_MICROSOFT;
     case PsProtectedSignerWindows:
-        return (UCHAR)SignatureLevel::Windows;
+        return SE_SIGNING_LEVEL_WINDOWS;
     //case PsProtectedSignerWinTcb:
-    //    return (UCHAR)SignatureLevel::WindowsTcb;
+    //    return SE_SIGNING_LEVEL_WINDOWS_TCB;
     case PsProtectedSignerWinTcb:
-        return (UCHAR)SignatureLevel::Windows; // Section signature level is actually 'Windows' in this case.
+        return SE_SIGNING_LEVEL_WINDOWS; // Section signature level is actually 'Windows' in this case.
     }
 
     ERROR(L"Failed to retrieve the Section signature level associated to the Signer type value %d.", SignerType);
@@ -195,38 +195,22 @@ LPCWSTR Utils::GetSignatureLevelAsString(UCHAR SignatureLevel)
 
     switch (bSignatureLevel)
     {
-    case (UCHAR)SignatureLevel::Unchecked:
-        return UTILS_STR_SIGNATURE_LEVEL_UNCHECKED;
-    case (UCHAR)SignatureLevel::Unsigned:
-        return UTILS_STR_SIGNATURE_LEVEL_UNSIGNED;
-    case (UCHAR)SignatureLevel::Enterprise:
-        return UTILS_STR_SIGNATURE_LEVEL_ENTERPRISE;
-    case (UCHAR)SignatureLevel::Custom1:
-        return UTILS_STR_SIGNATURE_LEVEL_CUSTOM1;
-    case (UCHAR)SignatureLevel::Authenticode:
-        return UTILS_STR_SIGNATURE_LEVEL_AUTHENTICODE;
-    case (UCHAR)SignatureLevel::Custom2:
-        return UTILS_STR_SIGNATURE_LEVEL_CUSTOM2;
-    case (UCHAR)SignatureLevel::Store:
-        return UTILS_STR_SIGNATURE_LEVEL_STORE;
-    case (UCHAR)SignatureLevel::Antimalware:
-        return UTILS_STR_SIGNATURE_LEVEL_ANTIMALWARE;
-    case (UCHAR)SignatureLevel::Microsoft:
-        return UTILS_STR_SIGNATURE_LEVEL_MICROSOFT;
-    case (UCHAR)SignatureLevel::Custom4:
-        return UTILS_STR_SIGNATURE_LEVEL_CUSTOM4;
-    case (UCHAR)SignatureLevel::Custom5:
-        return UTILS_STR_SIGNATURE_LEVEL_CUSTOM5;
-    case (UCHAR)SignatureLevel::DynamicCodegen:
-        return UTILS_STR_SIGNATURE_LEVEL_DYNAMICCODEGEN;
-    case (UCHAR)SignatureLevel::Windows:
-        return UTILS_STR_SIGNATURE_LEVEL_WINDOWS;
-    case (UCHAR)SignatureLevel::WindowsProtectedProcessLight:
-        return UTILS_STR_SIGNATURE_LEVEL_WINDOWSPROTECTEDPROCESSLIGHT;
-    case (UCHAR)SignatureLevel::WindowsTcb:
-        return UTILS_STR_SIGNATURE_LEVEL_WINDOWSTCB;
-    case (UCHAR)SignatureLevel::Custom6:
-        return UTILS_STR_SIGNATURE_LEVEL_CUSTOM6;
+        CASE_STR(SE_SIGNING_LEVEL_UNCHECKED);
+        CASE_STR(SE_SIGNING_LEVEL_UNSIGNED);
+        CASE_STR(SE_SIGNING_LEVEL_ENTERPRISE);
+        CASE_STR(SE_SIGNING_LEVEL_DEVELOPER);
+        CASE_STR(SE_SIGNING_LEVEL_AUTHENTICODE);
+        CASE_STR(SE_SIGNING_LEVEL_CUSTOM_2);
+        CASE_STR(SE_SIGNING_LEVEL_STORE);
+        CASE_STR(SE_SIGNING_LEVEL_ANTIMALWARE);
+        CASE_STR(SE_SIGNING_LEVEL_MICROSOFT);
+        CASE_STR(SE_SIGNING_LEVEL_CUSTOM_4);
+        CASE_STR(SE_SIGNING_LEVEL_CUSTOM_5);
+        CASE_STR(SE_SIGNING_LEVEL_DYNAMIC_CODEGEN);
+        CASE_STR(SE_SIGNING_LEVEL_WINDOWS);
+        CASE_STR(SE_SIGNING_LEVEL_CUSTOM_7);
+        CASE_STR(SE_SIGNING_LEVEL_WINDOWS_TCB);
+        CASE_STR(SE_SIGNING_LEVEL_CUSTOM_6);
     }
 
     ERROR(L"Failed to retrieve the Signature level associated to the value 0x%02x.", SignatureLevel);

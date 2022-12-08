@@ -51,24 +51,3 @@ typedef enum _PS_PROTECTED_SIGNER
     PsProtectedSignerApp,           // 8
     PsProtectedSignerMax            // 9
 } PS_PROTECTED_SIGNER, * PPS_PROTECTED_SIGNER;
-
-enum class SignatureLevel
-{
-	// https://github.com/palantir/exploitguard
-	Unchecked,
-	Unsigned,
-	Enterprise,
-	Custom1,
-	Authenticode,
-	Custom2,
-	Store,
-	Antimalware,
-	Microsoft,
-	Custom4,
-	Custom5,
-	DynamicCodegen,
-	Windows,
-	WindowsProtectedProcessLight,
-	WindowsTcb,
-	Custom6
-};

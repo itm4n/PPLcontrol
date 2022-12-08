@@ -279,22 +279,22 @@ BOOL Controller::UnprotectProcess(DWORD Pid)
         return FALSE;
     }
 
-    if (!SetProcessSignatureLevel(pProcess, (UCHAR)SignatureLevel::Unchecked))
+    if (!SetProcessSignatureLevel(pProcess, SE_SIGNING_LEVEL_UNCHECKED))
     {
         ERROR(L"Failed to set Signature level '%ws' (0x%02x) on process with PID %d.",
-            Utils::GetSignatureLevelAsString((UCHAR)SignatureLevel::Unchecked),
-            (UCHAR)SignatureLevel::Unchecked,
+            Utils::GetSignatureLevelAsString(SE_SIGNING_LEVEL_UNCHECKED),
+            SE_SIGNING_LEVEL_UNCHECKED,
             Pid
         );
 
         return FALSE;
     }
 
-    if (!SetProcessSectionSignatureLevel(pProcess, (UCHAR)SignatureLevel::Unchecked))
+    if (!SetProcessSectionSignatureLevel(pProcess, SE_SIGNING_LEVEL_UNCHECKED))
     {
         ERROR(L"Failed to set Section signature level '%ws' (0x%02x) on process with PID %d.",
-            Utils::GetSignatureLevelAsString((UCHAR)SignatureLevel::Unchecked),
-            (UCHAR)SignatureLevel::Unchecked,
+            Utils::GetSignatureLevelAsString(SE_SIGNING_LEVEL_UNCHECKED),
+            SE_SIGNING_LEVEL_UNCHECKED,
             Pid
         );
 
