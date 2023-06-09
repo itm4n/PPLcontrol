@@ -3,6 +3,7 @@
 #include "RTCore.h"
 #include "Utils.h"
 #include "Controller.h"
+#include <shellapi.h>
 
 #define PPLCONTROL_STR_CMD_LIST         L"list"
 #define PPLCONTROL_STR_CMD_GET          L"get"
@@ -20,9 +21,19 @@ int wmain(int argc, wchar_t* argv[])
     Controller* ctrl;
     DWORD dwPid;
 
-    if (argc < 2)
+    LPWSTR* szArglist;
+    int nArgs;
+        
+    szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+    if (NULL == szArglist)
     {
-        PrintUsage(argv[0]);
+        ERROR(L"Failed to parse command line.");
+        return 1;
+    }
+
+    if (nArgs < 2)
+    {
+        PrintUsage(szArglist[0]);
         PrintKernelDriverUsage();
         return 1;
     }
@@ -37,82 +48,85 @@ int wmain(int argc, wchar_t* argv[])
         return 2;
     }
 
-    if (!_wcsicmp(argv[1], PPLCONTROL_STR_CMD_LIST))
+    if (!_wcsicmp(szArglist[1], PPLCONTROL_STR_CMD_LIST))
     {
         if (!ctrl->ListProtectedProcesses())
             return 2;
     }
-    else if (!_wcsicmp(argv[1], PPLCONTROL_STR_CMD_GET) || !_wcsicmp(argv[1], PPLCONTROL_STR_CMD_UNPROTECT))
+    else if (!_wcsicmp(szArglist[1], PPLCONTROL_STR_CMD_GET) || !_wcsicmp(szArglist[1], PPLCONTROL_STR_CMD_UNPROTECT))
     {
-        ++argv;
-        --argc;
+        ++szArglist;
+        --nArgs;
 
-        if (argc < 2)
+        if (nArgs < 2)
         {
-            ERROR(L"Missing argument(s) for command: %ws", argv[0]);
+            ERROR(L"Missing argument(s) for command: %ws", szArglist[0]);
             return 1;
         }
 
-        if (!(dwPid = wcstoul(argv[1], nullptr, 10)))
+        if (!(dwPid = wcstoul(szArglist[1], nullptr, 10)))
         {
-            ERROR(L"Failed to parse argument as an unsigned integer: %ws", argv[1]);
+            ERROR(L"Failed to parse argument as an unsigned integer: %ws", szArglist[1]);
             return 1;
         }
 
-        if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_GET))
+        if (!_wcsicmp(szArglist[0], PPLCONTROL_STR_CMD_GET))
         {
             if (!ctrl->GetProcessProtection(dwPid))
                 return 2;
         }
-        else if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_UNPROTECT))
+        else if (!_wcsicmp(szArglist[0], PPLCONTROL_STR_CMD_UNPROTECT))
         {
             if (!ctrl->UnprotectProcess(dwPid))
                 return 2;
         }
         else
         {
-            ERROR(L"Unknown command: %ws", argv[0]);
+            ERROR(L"Unknown command: %ws", szArglist[0]);
             return 1;
         }
     }
-    else if (!_wcsicmp(argv[1], PPLCONTROL_STR_CMD_SET) || !_wcsicmp(argv[1], PPLCONTROL_STR_CMD_PROTECT))
+    else if (!_wcsicmp(szArglist[1], PPLCONTROL_STR_CMD_SET) || !_wcsicmp(szArglist[1], PPLCONTROL_STR_CMD_PROTECT))
     {
-        ++argv;
-        --argc;
+        ++szArglist;
+        --nArgs;
 
-        if (argc < 4)
+        if (nArgs < 4)
         {
-            ERROR(L"Missing argument(s) for command: %ws", argv[0]);
+            ERROR(L"Missing argument(s) for command: %ws", szArglist[0]);
             return 1;
         }
 
-        if (!(dwPid = wcstoul(argv[1], nullptr, 10)))
+        if (!(dwPid = wcstoul(szArglist[1], nullptr, 10)))
         {
-            ERROR(L"Failed to parse argument as an unsigned integer: %ws", argv[1]);
+            ERROR(L"Failed to parse argument as an unsigned integer: %ws", szArglist[1]);
             return 1;
         }
 
-        if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_SET))
+        if (!_wcsicmp(szArglist[0], PPLCONTROL_STR_CMD_SET))
         {
-            if (!ctrl->SetProcessProtection(dwPid, argv[2], argv[3]))
+            if (!ctrl->SetProcessProtection(dwPid, szArglist[2], szArglist[3]))
                 return 2;
         }
-        else if (!_wcsicmp(argv[0], PPLCONTROL_STR_CMD_PROTECT))
+        else if (!_wcsicmp(szArglist[0], PPLCONTROL_STR_CMD_PROTECT))
         {
-            if (!ctrl->ProtectProcess(dwPid, argv[2], argv[3]))
+            if (!ctrl->ProtectProcess(dwPid, szArglist[2], szArglist[3]))
                 return 2;
         }
         else
         {
-            ERROR(L"Unknown command: %ws", argv[0]);
+            ERROR(L"Unknown command: %ws", szArglist[0]);
             return 1;
         }
     }
     else
     {
-        ERROR(L"Unknown command: %ws", argv[1]);
+        ERROR(L"Unknown command: %ws", szArglist[1]);
         return 1;
     }
+
+    // Free memory allocated for CommandLineToArgvW arguments.
+    LocalFree(szArglist);
 
     DEBUG(L"Done");
 
