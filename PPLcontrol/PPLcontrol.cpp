@@ -1,3 +1,12 @@
+#include "common.h"
+#include "OffsetFinder.h"
+#include "RTCore.h"
+#include "Utils.h"
+#include "Controller.h"
+#include <shellapi.h>
+
+#define PPLCONTROL_STR_CMD_LIST         L"list"
+#define PPLCONTROL_STR_CMD_GET          L"get"
 #define PPLCONTROL_STR_CMD_SET          L"set"
 #define PPLCONTROL_STR_CMD_PROTECT      L"protect"
 #define PPLCONTROL_STR_CMD_UNPROTECT    L"unprotect"
